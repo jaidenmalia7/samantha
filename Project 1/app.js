@@ -65,7 +65,7 @@ const removeTypingAnimation = (incomingChatDiv, pElement) => {
     chatContainer.scrollTo(0, chatContainer.scrollHeight);
 }
 
-// Call the function to load data from your local JSON file
+// Call the function to load data from local JSON file
 getChatResponse();
 
 // Call the function to load data from local storage
@@ -81,7 +81,7 @@ function copyResponse(copyBtn) {
 }
 
 
-// Inside your showTypingAnimation function
+// Inside showTypingAnimation function (main chunk of code)
 const showTypingAnimation = async () => {
     // Display the typing animation
     const html = `<div class="chat-content">
@@ -136,7 +136,7 @@ const getResponseForUserInput = (userInput, jsonData) => {
     }
 }
 
-// Call the function to load data from your local JSON file
+// Call the function to load data from local JSON file
 loadDataFromLocalstorage();
 
 
