@@ -5,11 +5,17 @@
   box-sizing: border-box;
   font-family: "Poppins", sans-serif;
 }
+
+@font-face {
+  src: url(fonts/behance-640c3c8ba40f1.otf);
+  font-family: camille;
+}
+
 :root {
   --text-color: #fff;
   --icon-color: #E5E1E6; 
   --icon-hover-bg: #ae1932;
-  --placeholder-color: #ee8395;
+  --placeholder-color: #fff;
   --outgoing-chat-bg: #ca1f3b;
   --incoming-chat-bg:  #ee8395;
   --outgoing-chat-border: #ae1932;
@@ -56,8 +62,10 @@ body {
   text-align: center;
   color: var(--text-color);
 }
-.default-text h1 {
-  font-size: 3.3rem;
+/* samantha */
+.default-text h1 { 
+  font-family: camille;
+  font-size: 7rem;
 }
 .default-text p {
   margin-top: 10px;

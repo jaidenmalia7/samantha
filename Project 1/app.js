@@ -7,9 +7,6 @@ const deleteButton = document.querySelector("#delete-btn");
 let userText = null;
 
 
-/////////////////////////////////////////////////////////////////////////////
-const API_KEY = "PASTE-YOUR-API-KEY-HERE"; // Paste your API key here
-
 const loadDataFromLocalstorage = () => {
     // Load saved chats and theme from local storage and apply/add on the page
     const themeColor = localStorage.getItem("themeColor");
@@ -34,44 +31,48 @@ const createChatElement = (content, className) => {
     return chatDiv; // Return the created chat div
 }
 
-const getChatResponse = async (incomingChatDiv) => {
-    const API_URL = "https://api.openai.com/v1/completions";
-    const pElement = document.createElement("p");
+const JSON_FILE_PATH = 'data.json'; // myJSON file
 
-    // Define the properties and data for the API request
-    const requestOptions = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_KEY}`
-        },
-        body: JSON.stringify({
-            model: "text-davinci-003",
-            prompt: userText,
-            max_tokens: 2048,
-            temperature: 0.2,
-            n: 1,
-            stop: null
-        })
-    }
-
-    // Send POST request to API, get response and set the reponse as paragraph element text
+// Define the function to load data from your local JSON file
+// loadDataFromLocalJSON
+const getChatResponse = async () => {
     try {
-        const response = await (await fetch(API_URL, requestOptions)).json();
-        pElement.textContent = response.choices[0].text.trim();
-    } catch (error) { // Add error class to the paragraph element and set error text
-        pElement.classList.add("error");
-        pElement.textContent = "Oops! I seem to be having some trouble. Please try again, friend.";
+        const response = await fetch(JSON_FILE_PATH);
+        if (!response.ok) {
+            throw new Error('Failed to fetch JSON data.');
+        }
+        const jsonData = await response.json();
+        return jsonData;
+        // Process the jsonData as needed
+        // console.log(jsonData);
+        // const name = jsonData.name;
+        // return name;
+    } catch (error) {
+        console.error('Error loading JSON data:', error);
+        return "Oops! There was an error!";
+        // return null;
     }
+}
 
-    // Remove the typing animation, append the paragraph element and save the chats to local storage
+/////
+
+
+// Remove the typing animation, append the paragraph element, and save the chats to local storage
+const removeTypingAnimation = (incomingChatDiv, pElement) => {
     incomingChatDiv.querySelector(".typing-animation").remove();
     incomingChatDiv.querySelector(".chat-details").appendChild(pElement);
     localStorage.setItem("all-chats", chatContainer.innerHTML);
     chatContainer.scrollTo(0, chatContainer.scrollHeight);
 }
 
-const copyResponse = (copyBtn) => {
+// Call the function to load data from your local JSON file
+getChatResponse();
+
+// Call the function to load data from local storage
+loadDataFromLocalstorage();
+
+
+function copyResponse(copyBtn) {
     // Copy the text content of the response to the clipboard
     const reponseTextElement = copyBtn.parentElement.querySelector("p");
     navigator.clipboard.writeText(reponseTextElement.textContent);
@@ -79,8 +80,10 @@ const copyResponse = (copyBtn) => {
     setTimeout(() => copyBtn.textContent = "content_copy", 1000);
 }
 
-const showTypingAnimation = () => {
-    // Display the typing animation and call the getChatResponse function
+
+// Inside your showTypingAnimation function
+const showTypingAnimation = async () => {
+    // Display the typing animation
     const html = `<div class="chat-content">
                     <div class="chat-details">
                         <img src="images/chatbot.jpg" alt="chatbot-img">
@@ -90,14 +93,52 @@ const showTypingAnimation = () => {
                             <div class="typing-dot" style="--delay: 0.4s"></div>
                         </div>
                     </div>
-                    <span onclick="copyResponse(this)" class="material-symbols-rounded">content_copy</span>
+                    <span class="material-symbols-rounded">content_copy</span>
                 </div>`;
-    // Create an incoming chat div with typing animation and append it to chat container
     const incomingChatDiv = createChatElement(html, "incoming");
     chatContainer.appendChild(incomingChatDiv);
     chatContainer.scrollTo(0, chatContainer.scrollHeight);
-    getChatResponse(incomingChatDiv);
+
+    // Get the chat response
+    const jsonData = await getChatResponse();
+    const response = getResponseForUserInput(userText, jsonData);
+
+    // Ensure the response is a string before displaying it
+    const responseText = typeof response === 'string' ? response : 'Oops! There was an error in the response.';
+
+    // Replace the typing animation with the chat response
+    const chatResponseHtml = `<div class="chat-content">
+                                 <div class="chat-details">
+                                    <img src="images/chatbot.jpg" alt="chatbot-img">
+                                    <p>${responseText}</p>
+                                 </div>
+                               </div>`;
+    const chatResponseDiv = createChatElement(chatResponseHtml, "incoming");
+    incomingChatDiv.replaceWith(chatResponseDiv);
+
+    // Save the chats to local storage
+    localStorage.setItem("all-chats", chatContainer.innerHTML);
+    chatContainer.scrollTo(0, chatContainer.scrollHeight);
 }
+
+// Define a function to get a response based on user input
+const getResponseForUserInput = (userInput, jsonData) => {
+    if (jsonData) {
+        const conversation = jsonData.conversation;
+        const responseItem = conversation.find(item => item.message === userInput);
+        if (responseItem) {
+            return responseItem.response;
+        } else {
+            return "Sorry, love. I don't know what you mean.";
+        }
+    } else {
+        return 'Oops! There was an error loading JSON data.';
+    }
+}
+
+// Call the function to load data from your local JSON file
+loadDataFromLocalstorage();
+
 
 const handleOutgoingChat = () => {
     userText = chatInput.value.trim(); // Get chatInput value and remove extra spaces
@@ -109,7 +150,7 @@ const handleOutgoingChat = () => {
 
     const html = `<div class="chat-content">
                     <div class="chat-details">
-                        <img src="images/user.jpg" alt="user-img">
+                        <img src="images/user.png" alt="user-img">
                         <p>${userText}</p>
                     </div>
                 </div>`;
@@ -124,7 +165,7 @@ const handleOutgoingChat = () => {
 
 deleteButton.addEventListener("click", () => {
     // Remove the chats from local storage and call loadDataFromLocalstorage function
-    if(confirm("Are you sure you want to delete all the chats?")) {
+    if(confirm("Are you sure you want to delete our conversation?")) {
         localStorage.removeItem("all-chats");
         loadDataFromLocalstorage();
     }
